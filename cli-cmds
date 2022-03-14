@@ -20,6 +20,12 @@ oid=$(az ad signed-in-user show --query objectId -o tsv)
 # provision the HSM
 az keyvault create --hsm-name $hsm --resource-group $rg --location $loc --administrators $oid --retention-days 28
 
+# After the KV is created, use this command at any time to see it's configuration 
+az keyvault show --hsm-name $hsm
+
+#Enable Purge Protection -- may need to ctrl C out of this one, I needed to two times
+az keyvault update-hsm --enable-purge-protection true --hsm-name $hsm --resource-group $rg
+
 # backup the certs
 # create a directory for the certs to be saved
 mkdir $certs
@@ -48,11 +54,5 @@ az disk-encryption-set create --resource-group $rg --name $encset --key-url $kid
 #Grant the DiskEncryptionSet resource access to the key vault.
 desIdentity=$(az disk-encryption-set show -n $encset -g $rg --query [identity.principalId] -o tsv)
 az keyvault role assignment create --hsm-name $hsm --role "Managed HSM Crypto Service Encryption User" --assignee $desIdentity --scope /keys
- 
-#Enable Purge Protection -- may need to ctrl C out of this one, I needed to two times
-az keyvault update-hsm --enable-purge-protection true --hsm-name $hsm --resource-group $rg
- 
-# see if it enabled 
-az keyvault show --hsm-name $hsm
  
 # you should be able to add the BYOK encryption $encset to supported services
