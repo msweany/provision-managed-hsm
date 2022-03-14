@@ -4,7 +4,8 @@ hsm='managed-hsm-name'
 loc='deployment-location'
 key='byok-name'
 encset='encryption-set-name'
-upn='someone@microsoft.com'
+upn='someone@domain.com'
+certs='certs-directory'
 
 # Create the RG
 az group create -l $loc -n $rg
@@ -16,18 +17,18 @@ oid=$(az ad signed-in-user show --query objectId -o tsv)
 az keyvault create --hsm-name $hsm --resource-group $rg --location $loc --administrators $oid --retention-days 28
 
 # backup the certs
-Mkdir certs and CD into it
-# Paste in one at a time
-openssl req -newkey rsa:2048 -nodes -keyout cert_0.key -x509 -days 365 -out cert_0.cer
-openssl req -newkey rsa:2048 -nodes -keyout cert_1.key -x509 -days 365 -out cert_1.cer
-openssl req -newkey rsa:2048 -nodes -keyout cert_2.key -x509 -days 365 -out cert_2.cer
+# create a directory for the certs to be saved
+mkdir $certs
+# Paste in one at a time and answer questions
+openssl req -newkey rsa:2048 -nodes -keyout cert_0.key -x509 -days 365 -out ./$certs/cert_0.cer
+openssl req -newkey rsa:2048 -nodes -keyout cert_1.key -x509 -days 365 -out ./$certs/cert_1.cer
+openssl req -newkey rsa:2048 -nodes -keyout cert_2.key -x509 -days 365 -out ./$certs/cert_2.cer
  
-Cd ..
 # needed for recovery
-az keyvault security-domain download --hsm-name $hsm --sd-wrapping-keys ./certs/cert_0.cer ./certs/cert_1.cer ./certs/cert_2.cer --sd-quorum 2 --security-domain-file MHSM-SD.json
+az keyvault security-domain download --hsm-name $hsm --sd-wrapping-keys ./$certs/cert_0.cer ./$certs/cert_1.cer ./$certs/cert_2.cer --sd-quorum 2 --security-domain-file MHSM-SD.json
  
 # grant permissions
-az keyvault role assignment create --hsm-name $hsm --role "Managed HSM Crypto User" --assignee $upn--scope /keys
+az keyvault role assignment create --hsm-name $hsm --role "Managed HSM Crypto User" --assignee $upn --scope /keys
 # https://docs.microsoft.com/en-us/cli/azure/keyvault/role?view=azure-cli-latest
 # https://docs.microsoft.com/en-us/azure/key-vault/managed-hsm/built-in-roles
  
@@ -35,7 +36,7 @@ az keyvault role assignment create --hsm-name $hsm --role "Managed HSM Crypto Us
 az keyvault key create --hsm-name $hsm --name $key --ops wrapKey unwrapKey --kty RSA-HSM --size 3072
  
 ### Get KID
-kid=$(az keyvault key show --vault-name $kv --name $key --query [key.kid] -o tsv)
+kid=$(az keyvault key show --hsm-name $hsm --name $key --query [key.kid] -o tsv)
  
 #Encrypt disk via CLI
 az disk-encryption-set create --resource-group $rg --name $encset --key-url $kid --source-vault $hsm
