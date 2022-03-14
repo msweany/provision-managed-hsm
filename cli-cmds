@@ -48,8 +48,10 @@ az keyvault key create --hsm-name $hsm --name $key --ops wrapKey unwrapKey --kty
 ### Get KID
 kid=$(az keyvault key show --hsm-name $hsm --name $key --query [key.kid] -o tsv)
  
-#Encrypt disk via CLI
-az disk-encryption-set create --resource-group $rg --name $encset --key-url $kid --source-vault $hsm
+# Create a disk encryption set that uses the key we created earlier
+az disk-encryption-set create --resource-group $rg --name $encset --key-url $kid
+## adding source-vault was needed in the past, but is failing for me today (3/14/22)
+## az disk-encryption-set create --resource-group $rg --name $encset --key-url $kid --source-vault $hsm
  
 #Grant the DiskEncryptionSet resource access to the key vault.
 desIdentity=$(az disk-encryption-set show -n $encset -g $rg --query [identity.principalId] -o tsv)
