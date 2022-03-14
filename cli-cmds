@@ -6,6 +6,9 @@ key='byok-name'
 encset='encryption-set-name'
 upn='someone@microsoft.com'
 
+# Create the RG
+az group create -l $loc -n $rg
+
 # HSM Needs to be unique
 # get the ID of the signed in user
 oid=$(az ad signed-in-user show --query objectId -o tsv)
