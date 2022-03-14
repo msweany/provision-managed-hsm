@@ -1,6 +1,6 @@
 # Variables
 rg='resource-group'
-kv='keyvault-name'
+hsm='managed-hsm-name'
 loc='deployment-location'
 key='byok-name'
 encset='encryption-set-name'
