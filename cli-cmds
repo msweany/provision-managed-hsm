@@ -1,3 +1,14 @@
+# things to be aware of
+# make sure you are in the subscription you want to be in 
+az account show 
+# Set a specific sub
+az account set --subscription 'subscription-id'
+# if you get this error: 
+Failed to connect to MSI. Please make sure MSI is configured correctly.
+Get Token request returned: <Response [400]>
+# then you need to re-authenticate with the Azure CLI
+az login
+
 # Variables - adjust these as needed
 loc='deployment-location'
 upn='someone@domain.com'
